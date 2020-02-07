@@ -2,6 +2,8 @@
 
 This repository contains a simple web service that can be used for testing.
 
+[![Build Status](https://travis-ci.org/pegasystems/docker-mock-web-service.svg?branch=master)](https://travis-ci.org/pegasystems/docker-mock-web-service)
+
 The service exposes the following methods
 
 | path | description | parameters | returns |
