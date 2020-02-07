@@ -1,0 +1,25 @@
+services:
+- docker
+
+env:
+  global:
+    - IMAGE_NAME=pegasystems/mock-web-service
+    - VERSION=0.0.1
+    
+script:
+  - docker build -t $IMAGE_NAME . 
+  - docker images
+
+before_deploy:
+  - docker login -u="$DOCKER_USER" -p="$DOCKER_PASS"
+  - docker tag $IMAGE_NAME:latest $IMAGE_NAME:$VERSION #Tag for current version
+
+deploy:
+  provider: script
+  script: docker push $IMAGE_NAME:$VERSION
+  on:
+    repo: pegasystems/docker-pega-web-ready
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^(v.+|master)$
+
+    
