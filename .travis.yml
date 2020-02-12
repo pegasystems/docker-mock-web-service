@@ -1,25 +1,21 @@
 services:
 - docker
-
 env:
   global:
-    - IMAGE_NAME=pegasystems/mock-web-service
-    - VERSION=0.0.1
-    
+  - IMAGE_NAME=pegasystems/mock-web-service
+  - VERSION=0.0.1
+  - secure: r5de3ZexBnEZZMhQpW0O8WjTwYLUsGiscFfHHnxRuVSh+Om+1KZAHlyFJda1g6Ley3bcTzI12NlB9nWTV9SeuAiY7Zh/AKB75Vo9smikc4uFBBOf2YHeWsZ4JJCBUlgtPb6hnCdj5ef5xETNtZkFwLYtx6aSo+rEPmx+eQrD1pu4YUJ5NHTbk5SjFgsH8KdpNbNZTbMiSBTgpyJwOo5ZABJeBEzOA6Vw6q8GUON407N8JnCy6CtQG+BqIcYl0t1ZzCq0SDDsRl6uhz36RBwA++h2dYnGW66ejuwuwiQvPYKRFhy1y+PiRu+RZrAcaOjpSU3vli553P+62JPLqPi4UOWdF2Ig6uOJTCbIaS8nvdIJUQDLRMB5Nip5VhLrkZDq3QJsUSpsUCUPo5sMj3yPRaokdCer4fCC8F/ZXHDBE5qvAxH7g9GRZgWysMCR7tqreY7e1v1qTYPCQN/YM+WOsf9V2VvQgJmGmtJQRyAuq2yYTvB11sEHbSNNwiLSi+twmGRtBgPOadSYn8jNH9wp2/81I/IE7ANsjx4WhOodMh1kEG/LHjJSzE6rKolFKVxdloGV/KINJkxFKRtOEwsPrxebj0zFZS9gMHwCPXGFk3nZfK9osLlVhdiVDTBUm/MZVmqKSADfAPFqpHkD3p2MbEE/FLhrca8CPv18EsSCRU4=
+  - secure: jhqMiMwXPe8ABVbQ5pUFZGT217bocoL8FMgbrXZVK7WiWYMs9IWOk9ejEhw57wrUudy6oHle3Bs39lgwlehtxyveApqCv8in6d02dtBtQMoZ3/l6dgEdlUO1gSxxBqF0l/al5WTk42mGJJxjoDvAls73IqnNO1e2qEMCyK58KEGD2vohGaFst4XiKiskvj/uqwHvyoL/R5bD+971a4WyCJkZod7GdGBCHHkKifGxemPIm3BnU8Nf+UEaPRzywfyluHNFnKzau0HOyPc4TRdI4NEUuFChjeQ1GL0g9tJkWSH3iBAthyTjfKtJLvsaf5XesonBJE7Hn3PySyjj7BhDi8/s3adD2mgLUQL6w9e6IG9jdDTmN4VoxEfNOnatqcNLfpduHQ7gIL08BN/uxJ+YTtKYXotv6jTOz1YLG7qhX02C7AUhdnZgHd4JhF7/yujgIy8/qN+qFAWqypPTE8As955uvwwRIbEZH7FgDf6tHTAfz5Qru6A31sEMoGu5srcMnxjRfw4DHUmFlrzbBPufs/El9YZTyb3797ELclf1WmqLajOxDkmec729Db77kPM6krWVgsKZBKTDVl3IYvVwMNUU+HR0HOVe75mH1e7TQcKRoBnEL1GsPWbK2Bo4JZ/Xc4jLl/mbE+mKwj6coxZxC26bp09fAC5eP7OJIRQUPDM=
 script:
-  - docker build -t $IMAGE_NAME . 
-  - docker images
-
+- docker build -t $IMAGE_NAME .
+- docker images
 before_deploy:
-  - docker login -u="$DOCKER_USER" -p="$DOCKER_PASS"
-  - docker tag $IMAGE_NAME:latest $IMAGE_NAME:$VERSION #Tag for current version
-
+- docker login -u="$DOCKER_USER" -p="$DOCKER_PASS"
+- docker tag $IMAGE_NAME:latest $IMAGE_NAME:$VERSION
 deploy:
   provider: script
   script: docker push $IMAGE_NAME:$VERSION
   on:
     repo: pegasystems/docker-pega-web-ready
     all_branches: true
-    condition: $TRAVIS_BRANCH =~ ^(v.+|master)$
-
-    
+    condition: "$TRAVIS_BRANCH =~ ^(v.+|master)$"
