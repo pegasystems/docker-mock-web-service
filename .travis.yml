@@ -16,6 +16,6 @@ deploy:
   provider: script
   script: docker push $IMAGE_NAME:$VERSION
   on:
-    repo: pegasystems/mock-web-service
+    repo: pegasystems/docker-mock-web-service
     all_branches: true
     condition: "$TRAVIS_BRANCH =~ ^(v.+|master)$"
