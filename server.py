@@ -8,6 +8,7 @@ import json
 app = Flask(__name__)
 
 invocationCount = 0
+healthResponseCode = 200
 
 MESSAGE_FIELD = 'message'
 DEFAULT_MESSAGE = 'Hello, World!'
@@ -21,6 +22,8 @@ PATH_DELAY = '/delay'
 PATH_ECHO = '/echo'
 PATH_CODE = '/code'
 PATH_COUNT = '/count'
+PATH_HEALTH = '/health'
+PATH_SET_HEALTH = '/sethealth'
 
 @app.route(PATH_ROOT)
 def index():
@@ -48,6 +51,17 @@ def count():
     global invocationCount
     invocationCount += 1
     return json.dumps({ COUNT : invocationCount}), 200
+
+@app.route(PATH_HEALTH)
+def health():
+    return "", healthResponseCode
+
+@app.route(PATH_SET_HEALTH)
+def sethealth():
+    code = request.args.get(RESPONSECODE, default = 200, type = int)
+    global healthResponseCode
+    healthResponseCode = code
+    return "", 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

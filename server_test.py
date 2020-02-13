@@ -49,5 +49,20 @@ class TestMockServer(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data[server.COUNT], 3)
 
+    def test_health_check(self):
+        response = self.app.get(server.PATH_HEALTH)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.app.get(server.PATH_SET_HEALTH + "?" + server.RESPONSECODE + "=500")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.app.get(server.PATH_HEALTH)
+        self.assertEqual(response.status_code, 500)
+
+        response = self.app.get(server.PATH_SET_HEALTH + "?" + server.RESPONSECODE + "=200")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.app.get(server.PATH_HEALTH)
+        self.assertEqual(response.status_code, 200)
 if __name__ == "__main__":
     unittest.main()
