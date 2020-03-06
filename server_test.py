@@ -64,5 +64,18 @@ class TestMockServer(unittest.TestCase):
 
         response = self.app.get(server.PATH_HEALTH)
         self.assertEqual(response.status_code, 200)
+
+    def test_headers(self):
+        response = self.app.get(server.PATH_HEADERS, headers={'Key' : 'Value'})
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.get_data())
+        self.assertEqual('Value', data['headers']['Key'])
+
+    def test_redirect(self):
+        response = self.app.get(server.PATH_REDIRECT, headers={'X-Forwarded-Host' : 'mylb', 'X-Forwarded-Proto' : 'https'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual('https://mylb/', response.headers.get('Location'))
+
 if __name__ == "__main__":
     unittest.main()

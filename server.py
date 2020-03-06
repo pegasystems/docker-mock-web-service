@@ -1,11 +1,14 @@
 from flask import Flask
 from flask import g
 
-from flask import request
+from flask import request, redirect, url_for
 import time
 import json
 
 app = Flask(__name__)
+
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 invocationCount = 0
 healthResponseCode = 200
@@ -24,6 +27,8 @@ PATH_CODE = '/code'
 PATH_COUNT = '/count'
 PATH_HEALTH = '/health'
 PATH_SET_HEALTH = '/sethealth'
+PATH_HEADERS = '/headers'
+PATH_REDIRECT = '/redirect'
 
 @app.route(PATH_ROOT)
 def index():
@@ -62,6 +67,18 @@ def sethealth():
     global healthResponseCode
     healthResponseCode = code
     return "", 200
+
+@app.route(PATH_HEADERS)
+def headers():
+    response = {}
+    response['headers'] = {}
+
+    response['headers'] = dict(request.headers)
+    return json.dumps(response), 200
+
+@app.route(PATH_REDIRECT)
+def redir():
+    return redirect(url_for("index"))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
