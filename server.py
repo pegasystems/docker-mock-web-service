@@ -4,6 +4,7 @@ from flask import g
 from flask import request, redirect, url_for
 import time
 import json
+import socket
 
 app = Flask(__name__)
 
@@ -19,6 +20,8 @@ SECONDS = 'seconds'
 METHOD = 'method'
 RESPONSECODE = 'responsecode'
 COUNT = 'count'
+HOSTNAME = 'hostname'
+HOSTIP = 'hostip'
 
 PATH_ROOT = '/'
 PATH_DELAY = '/delay'
@@ -29,6 +32,7 @@ PATH_HEALTH = '/health'
 PATH_SET_HEALTH = '/sethealth'
 PATH_HEADERS = '/headers'
 PATH_REDIRECT = '/redirect'
+PATH_HOSTINFO = '/hostinfo'
 
 @app.route(PATH_ROOT)
 def index():
@@ -75,6 +79,12 @@ def headers():
 
     response['headers'] = dict(request.headers)
     return json.dumps(response), 200
+
+@app.route(PATH_HOSTINFO)
+def host_info():
+    hostname = socket.gethostname()
+    ip_addr = socket.gethostbyname(hostname)
+    return json.dumps({ HOSTNAME : hostname, HOSTIP: ip_addr }), 200
 
 @app.route(PATH_REDIRECT)
 def redir():
