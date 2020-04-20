@@ -2,6 +2,10 @@ import unittest
 import json
 import server
 
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 class TestMockServer(unittest.TestCase):
     
     def setUp(self):
@@ -76,6 +80,34 @@ class TestMockServer(unittest.TestCase):
         response = self.app.get(server.PATH_REDIRECT, headers={'X-Forwarded-Host' : 'mylb', 'X-Forwarded-Proto' : 'https'})
         self.assertEqual(response.status_code, 302)
         self.assertEqual('https://mylb/', response.headers.get('Location'))
+
+    def test_send_request(self):
+        targetUrl = 'https://httpbin.org/get'
+        response = self.app.post(server.PATH_REQUEST, json={server.TARGET_FIELD: targetUrl})
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.get_data())
+        self.assertEqual(data[server.RESPONSECODE], 200)
+        responseData = json.loads(data[server.DATA_FIELD])
+        self.assertEqual(targetUrl, responseData['url'])
+
+    def test_send_request_bad(self):
+        targetUrl = 'https://192.168.88.99'
+        response = self.app.post(server.PATH_REQUEST, json={server.TARGET_FIELD: targetUrl})
+        data = json.loads(response.get_data())
+        self.assertEqual(data[server.SUCCESS_FIELD], False)
+        self.assertEqual(data[server.MESSAGE_FIELD], 'connection_error') 
+
+    def test_tcp_connection(self):
+        response = self.app.post(server.PATH_TCP, json={server.TARGET_FIELD: '127.0.0.1', server.PORT_FIELD: 9999})
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.get_data())
+        self.assertEqual(data[server.MESSAGE_FIELD], 'connection_refused')
+
+    def test_postgres(self):
+        response = self.app.post(server.PATH_POSTGRES, json={server.TARGET_FIELD: '127.0.0.1', server.USER_FIELD: "user", server.PASSWORD_FIELD: "password"})
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.get_data())
+        self.assertEqual(data[server.SUCCESS_FIELD], False)
 
 if __name__ == "__main__":
     unittest.main()
