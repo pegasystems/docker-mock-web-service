@@ -5,6 +5,11 @@ from flask import request, redirect, url_for
 import time
 import json
 import socket
+import requests
+import urllib3
+import pg8000
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
@@ -22,6 +27,12 @@ RESPONSECODE = 'responsecode'
 COUNT = 'count'
 HOSTNAME = 'hostname'
 HOSTIP = 'hostip'
+TARGET_FIELD = 'target'
+DATA_FIELD = 'data'
+PORT_FIELD = 'port'
+SUCCESS_FIELD = 'success'
+USER_FIELD = 'user'
+PASSWORD_FIELD = 'password'
 
 PATH_ROOT = '/'
 PATH_DELAY = '/delay'
@@ -33,6 +44,9 @@ PATH_SET_HEALTH = '/sethealth'
 PATH_HEADERS = '/headers'
 PATH_REDIRECT = '/redirect'
 PATH_HOSTINFO = '/hostinfo'
+PATH_REQUEST = '/request'
+PATH_TCP = '/tcp'
+PATH_POSTGRES = '/postgres'
 
 @app.route(PATH_ROOT)
 def index():
@@ -89,6 +103,54 @@ def host_info():
 @app.route(PATH_REDIRECT)
 def redir():
     return redirect(url_for("index"))
+
+@app.route(PATH_REQUEST, methods=['POST'])
+def sendRequest():
+
+    data = json.loads(request.data)
+    try:
+        resp = requests.get(data[TARGET_FIELD], verify=False, timeout=5)
+        return json.dumps({SUCCESS_FIELD: True, RESPONSECODE: resp.status_code, DATA_FIELD: resp.text}), 200
+    except requests.exceptions.ConnectionError as ncr:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: "connection_error"}), 200
+    except ConnectionRefusedError as cr:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: "connection_refused"}), 200
+    except socket.timeout:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: "timed_out"}), 200
+    except Exception as inst:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: str(inst)}), 200
+
+@app.route(PATH_TCP, methods=['POST'])
+def tcpConnect():
+    data = json.loads(request.data)
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(5)
+    try:
+        s.connect((data[TARGET_FIELD], data[PORT_FIELD]))
+        return json.dumps({SUCCESS_FIELD: True}), 200
+    except ConnectionRefusedError as cr:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: "connection_refused"}), 200
+    except socket.timeout:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: "timed_out"}), 200
+    except Exception as inst:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: str(inst)}), 200
+    finally:
+        s.close()
+
+@app.route(PATH_POSTGRES, methods=['POST'])
+def testpostgres():
+
+    conn = None
+    try:
+        data = json.loads(request.data)
+        conn = pg8000.connect(user= data[USER_FIELD], password=data[PASSWORD_FIELD], host=data[TARGET_FIELD])
+        return json.dumps({SUCCESS_FIELD: True}), 200
+    except Exception as inst:
+        return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: str(inst)}), 200
+    finally:
+        if conn != None:
+            conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
