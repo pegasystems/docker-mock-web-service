@@ -1,6 +1,10 @@
 from flask import Flask
 from flask import g
 
+import gevent
+from gevent.pywsgi import WSGIServer
+from prometheus_flask_exporter import PrometheusMetrics
+
 from flask import request, redirect, url_for
 import time
 import json
@@ -12,6 +16,7 @@ import pg8000
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -153,4 +158,9 @@ def testpostgres():
             conn.close()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)
+
+    redirect_server = WSGIServer(('0.0.0.0', 8089), app)
+    redirect_server.start()
+
+    redirect_server = WSGIServer(('0.0.0.0', 8080), app)
+    redirect_server.serve_forever()
