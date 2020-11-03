@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from flask import Flask
 from flask import g
 
@@ -12,6 +14,9 @@ import socket
 import requests
 import urllib3
 import pg8000
+
+from gevent import monkey
+monkey.patch_all()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
