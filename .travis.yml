@@ -1,4 +1,5 @@
-dist: focal
+os: linux
+dist: xenial
 services:
 - docker
 env:
