@@ -115,14 +115,14 @@ class TestMockServer(unittest.TestCase):
         self.assertEqual(data[server.SUCCESS_FIELD], False)
 
     def test_search_get(self):
-        response = self.app.get(server.PATH_SEARCH)
+        response = self.app.get(server.PATH_WITH_TENANT)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
         self.assertEqual(data[server.RESPONSECODE], 200)
 
     def test_search_get_with_id(self):
         tenant_id = 'testid2616'
-        response = self.app.get(server.PATH_SEARCH + tenant_id + '/')
+        response = self.app.get(server.PATH_WITH_TENANT + tenant_id + '/')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
         self.assertEqual(data[server.RESPONSECODE], 200)
@@ -130,11 +130,12 @@ class TestMockServer(unittest.TestCase):
 
     def test_search_post(self):
         tenant_id = 'testid2617'
-        for path in ['model', 'index', 'query']:
-            response = self.app.post(server.PATH_SEARCH + tenant_id + '/' + path)
+        for action in ['model', 'index', 'query']:
+            response = self.app.post(server.PATH_WITH_TENANT + tenant_id + '/' + action)
             self.assertEqual(response.status_code, 200)
             data = json.loads(response.get_data())
             self.assertEqual(data["Status"], "Ok")
+            self.assertEqual(data["Action"], action)
 
 
 if __name__ == "__main__":
