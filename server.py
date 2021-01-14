@@ -57,6 +57,7 @@ PATH_HOSTINFO = '/hostinfo'
 PATH_REQUEST = '/request'
 PATH_TCP = '/tcp'
 PATH_POSTGRES = '/postgres'
+PATH_SEARCH = '/search/'
 
 
 @app.route(PATH_ROOT)
@@ -169,6 +170,21 @@ def testpostgres():
     finally:
         if conn != None:
             conn.close()
+
+
+# Search service
+@app.route(PATH_SEARCH)
+@app.route(PATH_SEARCH + '<string:tenant_id>/')
+def search_url_get(tenant_id=None):
+    response_code = request.args.get(RESPONSECODE, default=200, type=int)
+    return json.dumps({RESPONSECODE: response_code, "tenantID": tenant_id}), response_code
+
+
+@app.route(PATH_SEARCH + '<string:tenant_id>/model', methods=['POST'])
+@app.route(PATH_SEARCH + '<string:tenant_id>/index', methods=['POST'])
+@app.route(PATH_SEARCH + '<string:tenant_id>/query', methods=['POST'])
+def search_url_post(tenant_id):
+    return json.dumps({"Status": "Ok", "tenantID": tenant_id}), 200
 
 
 if __name__ == '__main__':

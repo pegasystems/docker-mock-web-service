@@ -1,13 +1,15 @@
-import unittest
 import json
-import server
+import unittest
 
 import urllib3
 
+import server
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 class TestMockServer(unittest.TestCase):
-    
+
     def setUp(self):
         self.app = server.app.test_client()
         self.app.testing = True
@@ -23,7 +25,7 @@ class TestMockServer(unittest.TestCase):
         data = json.loads(response.get_data())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data[server.SECONDS], 1)
-    
+
     def test_echo(self):
         response = self.app.post(server.PATH_ECHO + "?" + server.MESSAGE_FIELD + "=hi")
         data = json.loads(response.get_data())
@@ -36,7 +38,7 @@ class TestMockServer(unittest.TestCase):
         data = json.loads(response.get_data())
         self.assertEqual(response.status_code, 402)
         self.assertEqual(data[server.RESPONSECODE], 402)
-        
+
     def test_count(self):
         response = self.app.get(server.PATH_COUNT)
         data = json.loads(response.get_data())
@@ -70,14 +72,15 @@ class TestMockServer(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_headers(self):
-        response = self.app.get(server.PATH_HEADERS, headers={'Key' : 'Value'})
+        response = self.app.get(server.PATH_HEADERS, headers={'Key': 'Value'})
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.get_data())
         self.assertEqual('Value', data['headers']['Key'])
 
     def test_redirect(self):
-        response = self.app.get(server.PATH_REDIRECT, headers={'X-Forwarded-Host' : 'mylb', 'X-Forwarded-Proto' : 'https'})
+        response = self.app.get(server.PATH_REDIRECT,
+                                headers={'X-Forwarded-Host': 'mylb', 'X-Forwarded-Proto': 'https'})
         self.assertEqual(response.status_code, 302)
         self.assertEqual('https://mylb/', response.headers.get('Location'))
 
@@ -95,7 +98,7 @@ class TestMockServer(unittest.TestCase):
         response = self.app.post(server.PATH_REQUEST, json={server.TARGET_FIELD: targetUrl})
         data = json.loads(response.get_data())
         self.assertEqual(data[server.SUCCESS_FIELD], False)
-        self.assertEqual(data[server.MESSAGE_FIELD], 'connection_error') 
+        self.assertEqual(data[server.MESSAGE_FIELD], 'connection_error')
 
     def test_tcp_connection(self):
         response = self.app.post(server.PATH_TCP, json={server.TARGET_FIELD: '127.0.0.1', server.PORT_FIELD: 9999})
@@ -104,10 +107,35 @@ class TestMockServer(unittest.TestCase):
         self.assertEqual(data[server.MESSAGE_FIELD], 'connection_refused')
 
     def test_postgres(self):
-        response = self.app.post(server.PATH_POSTGRES, json={server.TARGET_FIELD: '127.0.0.1', server.USER_FIELD: "user", server.PASSWORD_FIELD: "password"})
+        response = self.app.post(server.PATH_POSTGRES,
+                                 json={server.TARGET_FIELD: '127.0.0.1', server.USER_FIELD: "user",
+                                       server.PASSWORD_FIELD: "password"})
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
         self.assertEqual(data[server.SUCCESS_FIELD], False)
+
+    def test_search_get(self):
+        response = self.app.get(server.PATH_SEARCH)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.get_data())
+        self.assertEqual(data[server.RESPONSECODE], 200)
+
+    def test_search_get_with_id(self):
+        tenant_id = 'testid2616'
+        response = self.app.get(server.PATH_SEARCH + tenant_id + '/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.get_data())
+        self.assertEqual(data[server.RESPONSECODE], 200)
+        self.assertEqual(data["tenantID"], tenant_id)
+
+    def test_search_post(self):
+        tenant_id = 'testid2617'
+        for path in ['model', 'index', 'query']:
+            response = self.app.post(server.PATH_SEARCH + tenant_id + '/' + path)
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.get_data())
+            self.assertEqual(data["Status"], "Ok")
+
 
 if __name__ == "__main__":
     unittest.main()
