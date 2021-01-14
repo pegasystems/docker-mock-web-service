@@ -1,0 +1,5 @@
+flask
+requests
+pg8000
+gevent
+prometheus-flask-exporter

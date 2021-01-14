@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 from gevent import monkey
+
 monkey.patch_all()
 
 from flask import Flask
-from flask import g
 
-import gevent
 from gevent.pywsgi import WSGIServer
 from prometheus_flask_exporter import PrometheusMetrics
 
@@ -18,14 +17,13 @@ import requests
 import urllib3
 import pg8000
 
-
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 metrics = PrometheusMetrics(app)
 
 from werkzeug.middleware.proxy_fix import ProxyFix
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 invocationCount = 0
@@ -60,65 +58,72 @@ PATH_REQUEST = '/request'
 PATH_TCP = '/tcp'
 PATH_POSTGRES = '/postgres'
 
+
 @app.route(PATH_ROOT)
 def index():
-    return json.dumps({ MESSAGE_FIELD : DEFAULT_MESSAGE })
+    return json.dumps({MESSAGE_FIELD: DEFAULT_MESSAGE})
 
 
 @app.route(PATH_DELAY)
 def slow():
-    seconds = request.args.get(SECONDS, default = 5, type = int)
+    seconds = request.args.get(SECONDS, default=5, type=int)
     time.sleep(seconds)
-    return json.dumps({ SECONDS : seconds })
+    return json.dumps({SECONDS: seconds})
 
-@app.route(PATH_ECHO, methods=['GET','HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'])
+
+@app.route(PATH_ECHO, methods=['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'])
 def echo():
-    arg = request.args.get(MESSAGE_FIELD, default = "", type = str)
-    return json.dumps({ METHOD : request.method, MESSAGE_FIELD : arg })
+    arg = request.args.get(MESSAGE_FIELD, default="", type=str)
+    return json.dumps({METHOD: request.method, MESSAGE_FIELD: arg})
+
 
 @app.route(PATH_CODE)
 def code():
-    code = request.args.get(RESPONSECODE, default = 200, type = int)
-    return json.dumps({ RESPONSECODE : code}), code
+    code = request.args.get(RESPONSECODE, default=200, type=int)
+    return json.dumps({RESPONSECODE: code}), code
+
 
 @app.route(PATH_COUNT)
 def count():
     global invocationCount
     invocationCount += 1
-    return json.dumps({ COUNT : invocationCount}), 200
+    return json.dumps({COUNT: invocationCount}), 200
+
 
 @app.route(PATH_HEALTH)
 def health():
     return "", healthResponseCode
 
+
 @app.route(PATH_SET_HEALTH)
 def sethealth():
-    code = request.args.get(RESPONSECODE, default = 200, type = int)
+    code = request.args.get(RESPONSECODE, default=200, type=int)
     global healthResponseCode
     healthResponseCode = code
     return "", 200
 
+
 @app.route(PATH_HEADERS)
 def headers():
-    response = {}
-    response['headers'] = {}
+    response = {'headers': dict(request.headers)}
 
-    response['headers'] = dict(request.headers)
     return json.dumps(response), 200
+
 
 @app.route(PATH_HOSTINFO)
 def host_info():
     hostname = socket.gethostname()
     ip_addr = socket.gethostbyname(hostname)
-    return json.dumps({ HOSTNAME : hostname, HOSTIP: ip_addr }), 200
+    return json.dumps({HOSTNAME: hostname, HOSTIP: ip_addr}), 200
+
 
 @app.route(PATH_REDIRECT)
 def redir():
     return redirect(url_for("index"))
 
+
 @app.route(PATH_REQUEST, methods=['POST'])
 def sendRequest():
-
     data = json.loads(request.data)
     try:
         resp = requests.get(data[TARGET_FIELD], verify=False, timeout=5)
@@ -131,6 +136,7 @@ def sendRequest():
         return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: "timed_out"}), 200
     except Exception as inst:
         return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: str(inst)}), 200
+
 
 @app.route(PATH_TCP, methods=['POST'])
 def tcpConnect():
@@ -150,13 +156,13 @@ def tcpConnect():
     finally:
         s.close()
 
+
 @app.route(PATH_POSTGRES, methods=['POST'])
 def testpostgres():
-
     conn = None
     try:
         data = json.loads(request.data)
-        conn = pg8000.connect(user= data[USER_FIELD], password=data[PASSWORD_FIELD], host=data[TARGET_FIELD])
+        conn = pg8000.connect(user=data[USER_FIELD], password=data[PASSWORD_FIELD], host=data[TARGET_FIELD])
         return json.dumps({SUCCESS_FIELD: True}), 200
     except Exception as inst:
         return json.dumps({SUCCESS_FIELD: False, MESSAGE_FIELD: str(inst)}), 200
@@ -164,8 +170,8 @@ def testpostgres():
         if conn != None:
             conn.close()
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     redirect_server = WSGIServer(('0.0.0.0', 8089), app)
     redirect_server.start()
 
