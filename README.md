@@ -16,4 +16,4 @@ The service exposes the following methods
 | /code | returns a response with a given status code | responsecode - the response code to use, defaults to 200 | {"responsecode" : (the response code)}
 | /hostinfo | returns hostname and ip of server | | {"hostname": "09d79b1445bd", "hostip": "172.17.0.2"} | 
 | /metrics | returns prometheus metrics for the server | |
-
+| /cookies    | returns the cookies that are set on the request and optionally set a cookie on the response | key - the cookie key to set on the response, value - the cookie value to set on the response | { "cookies" : {"cookiekey" : "cookievalue"} } |
