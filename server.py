@@ -9,7 +9,7 @@ from flask import Flask
 from gevent.pywsgi import WSGIServer
 from prometheus_flask_exporter import PrometheusMetrics
 
-from flask import request, redirect, url_for
+from flask import request, redirect, url_for, make_response
 import time
 import json
 import socket
@@ -43,6 +43,8 @@ PORT_FIELD = 'port'
 SUCCESS_FIELD = 'success'
 USER_FIELD = 'user'
 PASSWORD_FIELD = 'password'
+KEY_FIELD = 'key'
+VALUE_FIELD = 'value'
 
 PATH_ROOT = '/'
 PATH_DELAY = '/delay'
@@ -58,6 +60,7 @@ PATH_REQUEST = '/request'
 PATH_TCP = '/tcp'
 PATH_POSTGRES = '/postgres'
 PATH_WITH_TENANT = '/path/'
+PATH_COOKIE = '/cookies'
 
 
 @app.route(PATH_ROOT)
@@ -184,6 +187,16 @@ def search_url_get(tenant_id=None):
 def search_url_post(tenant_id, action):
     return json.dumps({"Status": "Ok", "tenantID": tenant_id, "Action": action}), 200
 
+
+@app.route(PATH_COOKIE, methods=['GET','POST'])
+def cookie():
+    key = request.args.get(KEY_FIELD, default="", type=str)
+    val = request.args.get(VALUE_FIELD, default="", type=str)
+
+    resp = make_response(json.dumps({"cookies":request.cookies}))
+    if (key != ""):
+        resp.set_cookie(key, val)
+    return resp
 
 if __name__ == '__main__':
     redirect_server = WSGIServer(('0.0.0.0', 8089), app)
