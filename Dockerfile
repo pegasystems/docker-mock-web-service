@@ -1,4 +1,4 @@
-FROM python:3.8.6-slim-buster
+FROM python:3.11.1-slim-buster
 
 RUN pip3 install flask requests pg8000 gevent prometheus-flask-exporter
 
